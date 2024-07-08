@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask
 from pymongo import MongoClient
 from urllib.parse import quote_plus
 
@@ -22,18 +22,8 @@ collection = db.get_collection("your_collection_name")  # Replace with your coll
 
 @app.route('/')
 def home():
-    return "Welcome to the Flask MongoDB server!"
+    return "<h1>MongoDB connected Successfull</h1>"
 
-@app.route('/data', methods=['GET'])
-def get_data():
-    data = list(collection.find({}, {"_id": 0}))  # Fetch all data from the collection
-    return jsonify(data)
-
-@app.route('/data', methods=['POST'])
-def add_data():
-    data = request.json
-    collection.insert_one(data)
-    return jsonify({"message": "Data added successfully!"}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
