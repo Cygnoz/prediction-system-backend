@@ -1,29 +1,42 @@
-from flask import Flask
+from flask import Flask, jsonify
 from pymongo import MongoClient
 from urllib.parse import quote_plus
+import logging
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
-# Original credentials
+# MongoDB credentials
 username = "nexdeveloper1"
-password = "Nexdev@683562"
+password = "nexdeveloper1"  # Replace with your actual password 
 
-# URL-encoded credentials
+# URL-encode username and password
 encoded_username = quote_plus(username)
 encoded_password = quote_plus(password)
 
-# MongoDB connection string with encoded credentials
-mongodb_uri = f"mongodb+srv://{encoded_username}:{encoded_password}@cluster0.xos19jy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+# MongoDB connection string
+mongodb_uri = f"mongodb+srv://{encoded_username}:{encoded_password}@cluster0.xos19jy.mongodb.net/Prediction?retryWrites=true&w=majority&appName=Cluster0"
 
-# Connect to MongoDB
-client = MongoClient(mongodb_uri)
-db = client.get_database("your_database_name")  # Replace with your database name
-collection = db.get_collection("your_collection_name")  # Replace with your collection name
+# Attempt to connect to MongoDB
+try:
+    client = MongoClient(mongodb_uri)
+    db = client.get_database("Prediction")
+    collection = db.get_collection("real_data")
 
-@app.route('/')
-def home():
-    return "<h1>MongoDB connected Successfull</h1>"
+    logging.info("MongoDB connected successfully")
 
+except Exception as e:
+    logging.error(f"Error connecting to MongoDB: {e}")
+
+# Example route to fetch data from MongoDB
+@app.route('/api/get_data', methods=['GET'])
+def get_data():
+    try:
+        data = list(collection.find({}, {'_id': 0}))  # Fetch all data, excluding _id
+        return jsonify(data), 200
+    except Exception as e:
+        logging.error(f"Error fetching data from MongoDB: {e}")
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
