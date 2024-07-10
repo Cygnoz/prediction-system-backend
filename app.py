@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from pymongo import MongoClient
 from urllib.parse import quote_plus
 import logging
@@ -36,6 +36,19 @@ def get_data():
         return jsonify(data), 200
     except Exception as e:
         logging.error(f"Error fetching data from MongoDB: {e}")
+        return jsonify({"error": str(e)}), 400
+
+
+# Example route to insert data into MongoDB
+
+@app.route('/api/add_data', methods=['POST'])
+def add_data():
+    try:
+        new_data = request.json  # Get JSON data from the request
+        collection.insert_one(new_data)  # Insert data into MongoDB
+        return jsonify({"message": "Data added successfully"}), 201
+    except Exception as e:
+        logging.error(f"Error inserting data into MongoDB: {e}")
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
