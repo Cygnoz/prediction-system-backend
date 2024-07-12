@@ -18,18 +18,44 @@ client = pymongo.MongoClient(mongodb_uri)
 # Access the database
 mydb = client['Prediction']
 
-# Define the schema for the 'Predicted_data' collection
+# Define the new schema for the 'Predicted_data' collection
 schema = {
     "bsonType": "object",
-    "required": ["date", "value"],
+    "required": ["month", "year", "draws"],
     "properties": {
-        "date": {
+        "month": {
             "bsonType": "string",
             "description": "must be a string and is required"
         },
-        "value": {
-            "bsonType": "double",
-            "description": "must be a double and is required"
+        "year": {
+            "bsonType": "int",
+            "description": "must be an integer and is required"
+        },
+        "draws": {
+            "bsonType": "array",
+            "description": "must be an array of draw documents and is required",
+            "items": {
+                "bsonType": "object",
+                "required": ["date", "morning", "afternoon", "evening"],
+                "properties": {
+                    "date": {
+                        "bsonType": "string",
+                        "description": "must be a string and is required"
+                    },
+                    "morning": {
+                        "bsonType": "double",
+                        "description": "must be a double and is required"
+                    },
+                    "afternoon": {
+                        "bsonType": "double",
+                        "description": "must be a double and is required"
+                    },
+                    "evening": {
+                        "bsonType": "double",
+                        "description": "must be a double and is required"
+                    }
+                }
+            }
         }
     }
 }
