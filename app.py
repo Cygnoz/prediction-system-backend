@@ -11,6 +11,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 from flask import Flask
 from flask_cors import CORS
+from datetime import datetime, timedelta
+import threading
+
 
 app = Flask(__name__)
 CORS(app)
@@ -33,6 +36,7 @@ try:
     db = client.get_database("Prediction")
     real_data_collection = db.get_collection("AllPredictions")
     users_collection = db.get_collection("users")  # Add users collection
+    predicted_data=db.get_collection("Predicted_data")
 
     logging.info("MongoDB connected successfully")
 
@@ -164,6 +168,12 @@ def predict_winning_numbers(date, n_predictions=10):
         'Evening_Predictions': evening_predictions
     }
 
+cached_predictions = {}
+cache_lock = threading.Lock()
+
+def get_cache_key(date):
+    return date.strftime("%Y-%m-%d")
+
 @app.route('/api/get_predict', methods=['GET'])
 def get_predict():
     date_str = request.args.get('date')
@@ -174,12 +184,44 @@ def get_predict():
 
     try:
         date_to_predict = pd.to_datetime(date_str)
-        predictions = predict_winning_numbers(date_to_predict, n_predictions)
+        cache_key = get_cache_key(date_to_predict)
+        
+        with cache_lock:
+            if cache_key in cached_predictions:
+                return jsonify(cached_predictions[cache_key])
+            
+            # If not in cache, generate new predictions
+            predictions = predict_winning_numbers(date_to_predict, n_predictions)
+            
+            predicted_data.insert_one({"date": date_to_predict, "value": predictions})
+
+            # Cache the new predictions
+            cached_predictions[cache_key] = predictions
+        
         return jsonify(predictions)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+# Function to clear the cache at midnight
+def clear_cache_at_midnight():
+    global cached_predictions
+    while True:
+        now = datetime.now()
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        time_to_midnight = (midnight - now).total_seconds()
+        threading.Timer(time_to_midnight, clear_cache).start()
+        time.sleep(time_to_midnight)
 
+def clear_cache():
+    global cached_predictions
+    with cache_lock:
+        cached_predictions.clear()
+    print("Cache cleared at midnight")
+
+# Start the cache clearing thread when the app starts
+import threading
+import time
+threading.Thread(target=clear_cache_at_midnight, daemon=True).start()
 
 #
 #
