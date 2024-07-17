@@ -14,6 +14,7 @@ from flask_cors import CORS
 from datetime import datetime, timedelta
 import threading
 import datetime
+from dateutil import parser
 
 
 app = Flask(__name__)
@@ -232,47 +233,24 @@ threading.Thread(target=clear_cache_at_midnight, daemon=True).start()
 
 
 # Example route to insert data into MongoDB
-# @app.route('/api/add_data', methods=['POST'])
-# def add_data():
-#     try:
-#         new_data = request.json  # Get JSON data from the request
-#         real_data_collection.insert_one(new_data)  # Insert data into MongoDB
-#         return jsonify({"message": "Data added successfully"}), 201
-#     except Exception as e:
-#         logging.error(f"Error inserting data into MongoDB: {e}")
-#         return jsonify({"error": str(e)}), 400
-
-
 @app.route('/api/add_data', methods=['POST'])
 def add_data():
     try:
         new_data = request.json  # Get JSON data from the request
-
-        # Validate the input data structure
-        if not new_data or 'date' not in new_data:
-            return jsonify({"error": "Invalid data format"}), 400
-
-        # Check if a document with the same date exists
-        existing_document = draws_collection.find_one({'date': new_data['date']})
-
-        if existing_document:
-            # Update the existing document
-            draws_collection.update_one(
-                {'date': new_data['date']},
-                {'$set': new_data}
-            )
-            message = "Data updated successfully"
-        else:
-            # Insert a new document
-            draws_collection.insert_one(new_data)
-            message = "Data added successfully"
-
-        return jsonify({"message": message}), 201
+ 
+        # Validate that all required fields are present
+        required_fields = ['year', 'month', 'draws']
+        for field in required_fields:
+            if field not in new_data:
+                return jsonify({"error": f"'{field}' is required"}), 400
+ 
+        # Additional validation can be added here if needed
+ 
+        real_data_collection.insert_one(new_data)  # Insert data into MongoDB
+        return jsonify({"message": "Data added successfully"}), 201
     except Exception as e:
         logging.error(f"Error inserting data into MongoDB: {e}")
         return jsonify({"error": str(e)}), 400
-
-
 
 
 # Hash password function
@@ -339,7 +317,6 @@ def login():
         logging.error(f"Error during login: {e}")
         return jsonify({"error": str(e)}), 500
     
-
 
 
     

@@ -77,15 +77,15 @@ def setup_mongodb_collection(client, db_name, collection_name):
                             "description": "must be a string and is required"
                         },
                         "morning": {
-                            "bsonType": ["double", "null"],
+                            "bsonType": ["double","int","null"],
                             "description": "must be a double or null"
                         },
                         "afternoon": {
-                            "bsonType": ["double", "null"],
+                            "bsonType": ["double","int", "null"],
                             "description": "must be a double or null"
                         },
                         "evening": {
-                            "bsonType": ["double", "null"],
+                            "bsonType": ["double","int", "null"],
                             "description": "must be a double or null"
                         }
                     }
