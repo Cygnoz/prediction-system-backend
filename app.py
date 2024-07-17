@@ -13,6 +13,7 @@ from flask import Flask
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import threading
+import datetime
 
 
 app = Flask(__name__)
@@ -37,6 +38,7 @@ try:
     real_data_collection = db.get_collection("AllPredictions")
     users_collection = db.get_collection("users")  # Add users collection
     predicted_data=db.get_collection("Predicted_data")
+    draws_collection=db.get_collection("draws_collection")
 
     logging.info("MongoDB connected successfully")
 
@@ -230,15 +232,48 @@ threading.Thread(target=clear_cache_at_midnight, daemon=True).start()
 
 
 # Example route to insert data into MongoDB
+# @app.route('/api/add_data', methods=['POST'])
+# def add_data():
+#     try:
+#         new_data = request.json  # Get JSON data from the request
+#         real_data_collection.insert_one(new_data)  # Insert data into MongoDB
+#         return jsonify({"message": "Data added successfully"}), 201
+#     except Exception as e:
+#         logging.error(f"Error inserting data into MongoDB: {e}")
+#         return jsonify({"error": str(e)}), 400
+
+
 @app.route('/api/add_data', methods=['POST'])
 def add_data():
     try:
         new_data = request.json  # Get JSON data from the request
-        real_data_collection.insert_one(new_data)  # Insert data into MongoDB
-        return jsonify({"message": "Data added successfully"}), 201
+
+        # Validate the input data structure
+        if not new_data or 'date' not in new_data:
+            return jsonify({"error": "Invalid data format"}), 400
+
+        # Check if a document with the same date exists
+        existing_document = draws_collection.find_one({'date': new_data['date']})
+
+        if existing_document:
+            # Update the existing document
+            draws_collection.update_one(
+                {'date': new_data['date']},
+                {'$set': new_data}
+            )
+            message = "Data updated successfully"
+        else:
+            # Insert a new document
+            draws_collection.insert_one(new_data)
+            message = "Data added successfully"
+
+        return jsonify({"message": message}), 201
     except Exception as e:
         logging.error(f"Error inserting data into MongoDB: {e}")
         return jsonify({"error": str(e)}), 400
+
+
+
 
 # Hash password function
 def hash_password(password):
@@ -303,6 +338,10 @@ def login():
     except Exception as e:
         logging.error(f"Error during login: {e}")
         return jsonify({"error": str(e)}), 500
+    
+
+
+
     
 if __name__ == '__main__':
     app.run(debug=True)
