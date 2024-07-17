@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 import threading
 import datetime
 from dateutil import parser
+import accuracy
 
 
 app = Flask(__name__)
@@ -317,6 +318,13 @@ def login():
         logging.error(f"Error during login: {e}")
         return jsonify({"error": str(e)}), 500
     
+@app.route('/api/get_accuracy', methods=['GET'])
+def get_accuracy():
+    try:
+        data = accuracy.overall_accuracy  # Fetch all data, excluding _id
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
     
