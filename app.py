@@ -13,7 +13,6 @@ from flask import Flask
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import threading
-import datetime
 from dateutil import parser
 import accuracy
 
