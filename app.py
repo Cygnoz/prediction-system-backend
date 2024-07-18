@@ -320,7 +320,7 @@ def login():
 @app.route('/api/get_accuracy', methods=['GET'])
 def get_accuracy():
     try:
-        data = accuracy.random_number  # Fetch all data, excluding _id
+        data = accuracy.overall_accuracy  # Fetch all data, excluding _id
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
