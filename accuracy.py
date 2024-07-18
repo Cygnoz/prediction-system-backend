@@ -7,6 +7,8 @@ def calculate_accuracy(predicted, actual):
     :param actual: List of actual numbers.
     :return: Accuracy as a percentage.
     """
+
+
     if len(predicted) != len(actual):
         raise ValueError("Length of predicted and actual lists must be the same.")
     
@@ -20,19 +22,18 @@ def calculate_accuracy(predicted, actual):
     return accuracy
 
 # Example usage
-predicted =[]
-actual =[]
-
-
+predicted = [40, 41, 39, 43, 41, 44, 39, 44, 38, 42, 46, 45, 47, 46, 49, 40, 51, 45, 42, 43, 55, 56, 52, 57, 50, 50, 57, 48, 50, 54]
+actual = [55,00,55]  # Real data for morning, afternoon, and evening predictions
 # Splitting predicted values for morning, afternoon, and evening
 morning_predictions = predicted[:10]
 afternoon_predictions = predicted[10:20]
 evening_predictions = predicted[20:30]
 # Creating combined actual values list to match the length of predicted values
+combined_predictions = morning_predictions + afternoon_predictions + evening_predictions
 combined_actual = actual * 10  # Replicate actual values to match the predictions count
 # Combining all predictions into a single list
 # Calculating overall accuracy
-overall_accuracy = calculate_accuracy(predicted , actual)
+overall_accuracy = calculate_accuracy(combined_actual , combined_predictions)
 # Multiply by 10
 overall_accuracy *= 10
 # Round to one decimal place
