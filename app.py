@@ -13,6 +13,7 @@ from flask import Flask
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import threading
+import datetime
 from dateutil import parser
 import accuracy
 
@@ -327,5 +328,5 @@ def get_accuracy():
 
 
     
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
