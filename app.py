@@ -15,7 +15,8 @@ from datetime import datetime, timedelta
 import threading
 from dateutil import parser
 import accuracy
-
+import threading
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -222,8 +223,7 @@ def clear_cache():
     print("Cache cleared at midnight")
 
 # Start the cache clearing thread when the app starts
-import threading
-import time
+
 threading.Thread(target=clear_cache_at_midnight, daemon=True).start()
 
 #
