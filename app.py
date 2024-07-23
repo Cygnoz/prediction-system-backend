@@ -231,8 +231,7 @@ cache_thread = threading.Thread(target=clear_cache_at_midnight, daemon=True)
 cache_thread.start()
 
 # Start the cache clearing thread when the app starts
-import threading
-import time
+
 threading.Thread(target=clear_cache_at_midnight, daemon=True).start()
 
 #
