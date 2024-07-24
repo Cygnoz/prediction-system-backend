@@ -8,18 +8,22 @@ import numpy as np
 import joblib
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
-from flask import Flask
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import threading
 from dateutil import parser
 import accuracy
+<<<<<<< HEAD
 import threading
 import time 
+=======
+
+
+
+>>>>>>> 5ff80f422458403201384a16b04c6dee882579f5
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "http://52.66.30.81:3000"}})
 logging.basicConfig(level=logging.INFO)
 
 # MongoDB credentials
@@ -206,21 +210,30 @@ def get_predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-# Function to clear the cache at midnight
-def clear_cache_at_midnight():
-    global cached_predictions
-    while True:
-        now = datetime.now()
-        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-        time_to_midnight = (midnight - now).total_seconds()
-        threading.Timer(time_to_midnight, clear_cache).start()
-        time.sleep(time_to_midnight)
+# Initialize cache and lock
+cached_predictions = {}
+cache_lock = threading.Lock()
 
 def clear_cache():
     global cached_predictions
     with cache_lock:
         cached_predictions.clear()
     print("Cache cleared at midnight")
+
+def clear_cache_at_midnight():
+    global cached_predictions
+    while True:
+        now = datetime.now()  # Ensure using correct datetime
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        time_to_midnight = (midnight - now).total_seconds()
+        
+        # Sleep until midnight and then clear the cache
+        time.sleep(time_to_midnight)
+        clear_cache()
+
+# Start the cache clearing thread
+cache_thread = threading.Thread(target=clear_cache_at_midnight, daemon=True)
+cache_thread.start()
 
 # Start the cache clearing thread when the app starts
 
@@ -320,7 +333,7 @@ def login():
 @app.route('/api/get_accuracy', methods=['GET'])
 def get_accuracy():
     try:
-        data = accuracy.random_number  # Fetch all data, excluding _id
+        data = accuracy.overall_accuracy  # Fetch all data, excluding _id
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -328,4 +341,4 @@ def get_accuracy():
 
     
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
