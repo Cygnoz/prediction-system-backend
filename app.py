@@ -13,17 +13,11 @@ from datetime import datetime, timedelta
 import threading
 from dateutil import parser
 import accuracy
-<<<<<<< HEAD
 import threading
 import time 
-=======
-
-
-
->>>>>>> 5ff80f422458403201384a16b04c6dee882579f5
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://52.66.30.81:3000"}})
+CORS(app)
 logging.basicConfig(level=logging.INFO)
 
 # MongoDB credentials
