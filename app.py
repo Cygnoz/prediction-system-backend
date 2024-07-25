@@ -17,7 +17,7 @@ import threading
 import time 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://13.232.52.232:3000"}})
 logging.basicConfig(level=logging.INFO)
 
 # MongoDB credentials
