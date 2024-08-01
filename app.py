@@ -18,7 +18,7 @@ import time
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
+CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 
@@ -331,12 +331,10 @@ def login():
 @app.route('/api/get_accuracy', methods=['GET'])
 def get_accuracy():
     try:
-        data = accuracy.overall_accuracy  # Fetch all data, excluding _id
+        data = accuracy.get_overall_accuracy()
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-
     
 if __name__ == '__main__':
     app.run()
