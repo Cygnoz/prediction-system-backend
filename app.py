@@ -18,7 +18,7 @@ import time
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins":"*"}})
+CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
 
 
 
