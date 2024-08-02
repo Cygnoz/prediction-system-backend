@@ -59,7 +59,33 @@ def get_data():
         logging.error(f"Error fetching data from MongoDB: {e}")
         return jsonify({"error": str(e)}), 400
     
-
+@app.route('/api/get_predict_data', methods=['GET'])
+def get_predict_data():
+    try:
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$date",
+                    "firstDocument": { "$first": "$$ROOT" }
+                }
+            },
+            {
+                "$replaceRoot": { "newRoot": "$firstDocument" }
+            },
+            {
+                "$project": { "_id": 0 }  # Exclude the _id field
+            }
+        ]
+        
+        unique_data = list(predicted_data.aggregate(pipeline))
+        
+        # Log the data to debug
+        logging.info(f"Unique Data Fetched: {unique_data}")
+        
+        return jsonify(unique_data), 200
+    except Exception as e:
+        logging.error(f"Error fetching data from MongoDB: {e}")
+        return jsonify({"error": str(e)}), 400
 
 #training sets
 #
