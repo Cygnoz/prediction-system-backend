@@ -122,52 +122,30 @@
 #     print(f"Overall accuracy result: {overall_accuracy}")
 
 
-
-
 import requests
 import datetime
-import logging
-
-# Configure the logger
-logging.basicConfig(
-    level=logging.DEBUG,  # Set the logging level to DEBUG
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Log message format
-    handlers=[
-        logging.FileHandler("draw_prediction.log"),  # Log to a file
-        logging.StreamHandler()  # Log to console
-    ]
-)
 
 BaseURL = "http://127.0.0.1:5000"
 
 def get_predictions(date):
     url = f"{BaseURL}/api/get_predict?date={date}&n_predictions=10"
-    logging.debug(f"Requesting predictions from: {url}")
     response = requests.get(url)
-    logging.debug(f"Response status code: {response.status_code}")
-    logging.debug(f"Raw response content: {response.text}")
     if response.status_code == 200:
         data = response.json()
-        logging.debug(f"Parsed JSON data: {data}")
         return {
             'morning': data.get('Morning_Predictions', []),
             'afternoon': data.get('Afternoon_Predictions', []),
             'evening': data.get('Evening_Predictions', [])
         }
     else:
-        logging.error(f"Failed to get predictions: {response.text}")
         return {}
 
 def fetch_data_from_api():
     url = f"{BaseURL}/api/get_data"
-    logging.debug(f"Requesting actual draws from: {url}")
     response = requests.get(url)
-    logging.debug(f"Response status code: {response.status_code}")
     if response.status_code == 200:
-        logging.debug("Actual draws data received")
         return response.json()
     else:
-        logging.error(f"Failed to get actual draws: {response.text}")
         return []
 
 def get_latest_actual_draw():
@@ -175,12 +153,10 @@ def get_latest_actual_draw():
     
     # Check if data is a list of entries
     if not isinstance(data, list):
-        logging.error("Expected the response to be a list.")
         raise ValueError("Expected the response to be a list.")
     
     # Check for empty data
     if not data:
-        logging.error("No draws found in the data.")
         raise ValueError("No draws found in the data.")
     
     # Extract the latest entry
@@ -190,7 +166,6 @@ def get_latest_actual_draw():
     draws = latest_entry.get('draws', [])
     
     if not draws:
-        logging.error("No draws available in the latest entry.")
         raise ValueError("No draws available in the latest entry.")
     
     # Get the most recent draw from the draws list
@@ -223,22 +198,15 @@ def calculate_accuracy(predictions, actual):
 def get_overall_accuracy():
     today = datetime.date.today()
     today_str = today.strftime("%y-%m-%d")
-    logging.debug(f"Today's date: {today_str}")
     
     predictions_response = get_predictions(today_str)
     morning_predictions = predictions_response.get('morning', [])
     afternoon_predictions = predictions_response.get('afternoon', [])
     evening_predictions = predictions_response.get('evening', [])
     
-    logging.debug(f"Morning predictions: {morning_predictions}")
-    logging.debug(f"Afternoon predictions: {afternoon_predictions}")
-    logging.debug(f"Evening predictions: {evening_predictions}")
-    
     combined_predictions = morning_predictions + afternoon_predictions + evening_predictions
-    logging.debug(f"Combined predictions: {combined_predictions}")
     
     actual_response = get_latest_actual_draw()
-    logging.debug(f"Actual response: {actual_response}")
     
     actual_draws = {
         'morning': actual_response.get('morning'),
@@ -246,21 +214,17 @@ def get_overall_accuracy():
         'evening': actual_response.get('evening')
     }
     
-    logging.debug(f"Actual draws: {actual_draws}")
-    
     if not any(actual_draws.values()):  # Check if all values are empty
-        logging.error("Actual draws are incomplete.")
         raise ValueError("Actual draws are incomplete.")
     
     overall_accuracy = calculate_accuracy(predictions_response, actual_draws)
     overall_accuracy = round(overall_accuracy, 1)
     
-    logging.debug(f"Overall accuracy: {overall_accuracy}")
     return {"overall_accuracy": overall_accuracy}
 
 if __name__ == "__main__":
     try:
         overall_accuracy = get_overall_accuracy()
-        logging.info(f"Overall accuracy result: {overall_accuracy}")
+        print(f"Overall accuracy result: {overall_accuracy}")
     except Exception as e:
-        logging.exception("An error occurred while calculating overall accuracy.")
+        print(f"An error occurred while calculating overall accuracy: {e}")
