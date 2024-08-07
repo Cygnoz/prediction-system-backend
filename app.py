@@ -18,7 +18,8 @@ import time
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
+# CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
+CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 
@@ -63,6 +64,11 @@ def get_data():
 def get_predict_data():
     try:
         pipeline = [
+                        {
+                "$match": {
+                    "date": { "$gte": datetime(2024, 1, 1) }
+                }
+            },
             {
                 "$group": {
                     "_id": "$date",
@@ -73,14 +79,19 @@ def get_predict_data():
                 "$replaceRoot": { "newRoot": "$firstDocument" }
             },
             {
-                "$project": { "_id": 0 }  # Exclude the _id field
+                "$project": { "_id": 0 }
+            },
+            {
+                "$sort": { "date": 1 }  # Sort by date in ascending order
             }
         ]
         
         unique_data = list(predicted_data.aggregate(pipeline))
         
         # Log the data to debug
-        logging.info(f"Unique Data Fetched: {unique_data}")
+        logging.info(f"Number of documents fetched: {len(unique_data)}")
+        if unique_data:
+            logging.info(f"Sample document: {unique_data[0]}")
         
         return jsonify(unique_data), 200
     except Exception as e:
