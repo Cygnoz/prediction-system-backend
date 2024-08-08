@@ -18,6 +18,12 @@ import time
 
 app = Flask(__name__)
 
+
+def set_x_frame_options(response):
+    response.headers['X-Frame-Options'] = 'DENY'  # or 'SAMEORIGIN'
+    return response
+
+
 # CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
 CORS(app, resources={r"/*": {"origins":"*"}})
 
