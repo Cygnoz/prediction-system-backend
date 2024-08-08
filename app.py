@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, after_this_request
 from pymongo import MongoClient
 from urllib.parse import quote_plus
 import logging
@@ -18,7 +18,7 @@ import time
 
 app = Flask(__name__)
 
-
+@app.after_request
 def set_x_frame_options(response):
     response.headers['X-Frame-Options'] = 'DENY'  # or 'SAMEORIGIN'
     return response
