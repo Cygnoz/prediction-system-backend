@@ -15,6 +15,9 @@ from dateutil import parser
 import accuracy
 import threading
 import time 
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import atexit
 
 app = Flask(__name__)
 
@@ -24,8 +27,8 @@ def set_x_frame_options(response):
     return response
 
 
-CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
-# CORS(app, resources={r"/*": {"origins":"*"}})
+#CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
+CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 
@@ -69,10 +72,15 @@ def get_data():
 @app.route('/api/get_predict_data', methods=['GET'])
 def get_predict_data():
     try:
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
         pipeline = [
-                        {
+            {
                 "$match": {
-                    "date": { "$gte": datetime(2024, 1, 1) }
+                    "date": {
+                        "$gte": datetime(2024, 1, 1),
+                        "$lte": today
+                    }
                 }
             },
             {
@@ -233,53 +241,78 @@ def get_predict():
 
     try:
         date_to_predict = pd.to_datetime(date_str)
-        cache_key = get_cache_key(date_to_predict)
-        
-        with cache_lock:
-            if cache_key in cached_predictions:
-                return jsonify(cached_predictions[cache_key])
-            
-            # If not in cache, generate new predictions
-            predictions = predict_winning_numbers(date_to_predict, n_predictions)
-            
-            predicted_data.insert_one({"date": date_to_predict, "value": predictions})
-
-            # Cache the new predictions
-            cached_predictions[cache_key] = predictions
-        
-        return jsonify(predictions)
+        return generate_prediction(date_to_predict, n_predictions)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+def generate_prediction(date_to_predict, n_predictions):
+    cache_key = get_cache_key(date_to_predict)
+    
+    with cache_lock:
+        if cache_key in cached_predictions:
+            return jsonify(cached_predictions[cache_key])
+        
+        # If not in cache, generate new predictions
+        predictions = predict_winning_numbers(date_to_predict, n_predictions)
+        
+        predicted_data.insert_one({"date": date_to_predict, "value": predictions})
+
+        # Cache the new predictions
+        cached_predictions[cache_key] = predictions
+    
+    return jsonify(predictions)
+
+def automated_daily_prediction():
+    today = datetime.now().date()
+    # tomorrow = today + timedelta(days=1)
+    
+    app.logger.info(f"Generating prediction for {today}")
+    
+    with app.app_context():
+        generate_prediction(today, 10)  # Assuming 10 predictions by default
+    
+    app.logger.info(f"Daily prediction for {today} completed")
+
+# Initialize scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    func=automated_daily_prediction,
+    trigger=CronTrigger(hour=0, minute=5),  # Run at 00:05 every day
+    id='daily_prediction_job',
+    name='Generate daily prediction',
+    replace_existing=True)
+
+# Start the scheduler
+scheduler.start()
+
+
 
 # Initialize cache and lock
 cached_predictions = {}
 cache_lock = threading.Lock()
 
-def clear_cache():
+def clear_outdated_cache():
     global cached_predictions
     with cache_lock:
-        cached_predictions.clear()
-    print("Cache cleared at midnight")
+        current_date = datetime.now().date()
+        cached_predictions = {
+            k: v for k, v in cached_predictions.items()
+            if pd.to_datetime(k).date() >= current_date
+        }
+    print(f"Cache cleared. Retained predictions from {current_date} onwards")
 
 def clear_cache_at_midnight():
-    global cached_predictions
     while True:
-        now = datetime.now()  # Ensure using correct datetime
+        now = datetime.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
         time_to_midnight = (midnight - now).total_seconds()
         
-        # Sleep until midnight and then clear the cache
         time.sleep(time_to_midnight)
-        clear_cache()
+        clear_outdated_cache()
+        time.sleep(1)  # Wait 1 second before calculating next midnight
 
-# Start the cache clearing thread
-cache_thread = threading.Thread(target=clear_cache_at_midnight, daemon=True)
-cache_thread.start()
-
-# Start the cache clearing thread when the app starts
-
+# Start the cache clearing thread only once when the app starts
 threading.Thread(target=clear_cache_at_midnight, daemon=True).start()
-
 #
 #
 #
@@ -381,3 +414,7 @@ def get_accuracy():
     
 if __name__ == '__main__':
     app.run()
+
+# Shut down the scheduler when exiting the app
+atexit.register(lambda: scheduler.shutdown())
+
