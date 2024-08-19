@@ -73,13 +73,44 @@ def get_data():
 def get_predict_data():
     try:
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        start_date = datetime(2024, 1, 1)
+        
+        logging.info(f"Fetching data from {start_date} to {today}")
         
         pipeline = [
             {
                 "$match": {
                     "date": {
-                        "$gte": datetime(2024, 1, 1),
+                        "$gte": start_date,
                         "$lte": today
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "$expr": {
+                        "$not": {
+                            "$or": [
+                                {
+                                    "$and": [
+                                        {"$eq": [{"$dayOfMonth": "$date"}, 15]},
+                                        {"$eq": [{"$month": "$date"}, 8]}
+                                    ]
+                                },
+                                {
+                                    "$and": [
+                                        {"$eq": [{"$dayOfMonth": "$date"}, 2]},
+                                        {"$eq": [{"$month": "$date"}, 10]}
+                                    ]
+                                },
+                                {
+                                    "$and": [
+                                        {"$eq": [{"$dayOfMonth": "$date"}, 26]},
+                                        {"$eq": [{"$month": "$date"}, 1]}
+                                    ]
+                                }
+                            ]
+                        }
                     }
                 }
             },
@@ -96,16 +127,23 @@ def get_predict_data():
                 "$project": { "_id": 0 }
             },
             {
-                "$sort": { "date": 1 }  # Sort by date in ascending order
+                "$sort": { "date": 1 }
             }
         ]
         
+        logging.info(f"Aggregation pipeline: {pipeline}")
+        
         unique_data = list(predicted_data.aggregate(pipeline))
         
-        # Log the data to debug
         logging.info(f"Number of documents fetched: {len(unique_data)}")
         if unique_data:
-            logging.info(f"Sample document: {unique_data[0]}")
+            logging.info(f"First document: {unique_data[0]}")
+            logging.info(f"Last document: {unique_data[-1]}")
+        else:
+            logging.warning("No documents fetched")
+        
+        total_count = predicted_data.count_documents({})
+        logging.info(f"Total documents in collection: {total_count}")
         
         return jsonify(unique_data), 200
     except Exception as e:
