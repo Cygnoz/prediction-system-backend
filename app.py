@@ -28,7 +28,7 @@ def set_x_frame_options(response):
 
 
 CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
-# CORS(app, resources={r"/*": {"origins":"*"}})
+#CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 
@@ -63,7 +63,8 @@ except Exception as e:
 @app.route('/api/get_data', methods=['GET'])
 def get_data():
     try:
-        data = list(real_data_collection.find({}, {'_id': 0}))  # Fetch all data, excluding _id
+        # Fetch the latest 20 documents, excluding _id
+        data = list(real_data_collection.find({}, {'_id': 0}).sort([('timestamp', -1)]).limit(2))
         return jsonify(data), 200
     except Exception as e:
         logging.error(f"Error fetching data from MongoDB: {e}")
@@ -73,7 +74,7 @@ def get_data():
 def get_predict_data():
     try:
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        start_date = datetime(2024, 1, 1)
+        start_date = datetime(2024, 7, 24)
         
         logging.info(f"Fetching data from {start_date} to {today}")
         
@@ -451,7 +452,7 @@ def get_accuracy():
         return jsonify({"error": str(e)}), 400
     
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000) 
 
 # Shut down the scheduler when exiting the app
 atexit.register(lambda: scheduler.shutdown())
