@@ -27,7 +27,7 @@ def set_x_frame_options(response):
     return response
 
 
-CORS(app, resources={r"/*": {"origins":"http://13.232.52.232:3000"}})
+CORS(app, resources={r"/*": {"origins":"https://13.232.52.232:3000"}})
 #CORS(app, resources={r"/*": {"origins":"*"}})
 
 
@@ -291,13 +291,22 @@ def generate_prediction(date_to_predict, n_predictions):
         if cache_key in cached_predictions:
             return jsonify(cached_predictions[cache_key])
         
-        # If not in cache, generate new predictions
-        predictions = predict_winning_numbers(date_to_predict, n_predictions)
-        
-        predicted_data.insert_one({"date": date_to_predict, "value": predictions})
+        try:
+            # If not in cache, generate new predictions
+            predictions = predict_winning_numbers(date_to_predict, n_predictions)
+            
+            # Ensure date_to_predict is in a format that MongoDB can handle
+            if isinstance(date_to_predict, pd.Timestamp):
+                date_to_predict = date_to_predict.to_pydatetime()
+            
+            # Insert the new predictions into the database
+            predicted_data.insert_one({"date": date_to_predict, "value": predictions})
 
-        # Cache the new predictions
-        cached_predictions[cache_key] = predictions
+            # Cache the new predictions
+            cached_predictions[cache_key] = predictions
+        except Exception as e:
+            logging.error(f"Error generating or inserting predictions: {e}")
+            return jsonify({"error": str(e)}), 500
     
     return jsonify(predictions)
 
