@@ -27,8 +27,8 @@ def set_x_frame_options(response):
     return response
 
 
-#CORS(app, resources={r"/*": {"origins":"https://13.232.52.232:3000"}})
-CORS(app, resources={r"/*": {"origins":"*"}})
+CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
+#CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 
