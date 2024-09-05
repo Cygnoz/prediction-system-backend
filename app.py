@@ -27,8 +27,8 @@ def set_x_frame_options(response):
     return response
 
 
-CORS(app, resources={r"/*": {"origins":"https://13.232.52.232:3000"}})
-#CORS(app, resources={r"/*": {"origins":"*"}})
+#CORS(app, resources={r"/*": {"origins":"https://13.232.52.232:3000"}})
+CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 
@@ -58,6 +58,10 @@ try:
 
 except Exception as e:
     logging.error(f"Error connecting to MongoDB: {e}")
+
+@app.route('/')
+def home():
+    return jsonify({"message": "Welcome to the Prediction System!"})
 
 # Example route to fetch data from MongoDB
 @app.route('/api/get_data', methods=['GET'])
