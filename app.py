@@ -22,15 +22,20 @@ import atexit
 app = Flask(__name__)
 
 
+# def set_x_frame_options(response):
+#     response.headers['X-Frame-Options'] = 'DENY'  # or 'SAMEORIGIN'
+#     return response
+
+
+#CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
+#CORS(app, resources={r"/*": {"origins":"*"}})
+CORS(app, resources={r"/api/*": {"origins": "https://prediction.aisana.net"}})
+
 def set_x_frame_options(response):
     response.headers['X-Frame-Options'] = 'DENY'  # or 'SAMEORIGIN'
     return response
 
-CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
-#CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
-#CORS(app, resources={r"/*": {"origins":"*"}})
-
-
+app.after_request(set_x_frame_options)
 
 logging.basicConfig(level=logging.INFO)
 
