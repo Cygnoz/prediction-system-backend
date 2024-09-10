@@ -125,7 +125,7 @@
 import requests
 import datetime
 
-BaseURL = "http://127.0.0.1:5000"
+BaseURL = "https://prediction.aisana.net:5000"
 
 def get_predictions(date):
     url = f"{BaseURL}/api/get_predict?date={date}&n_predictions=10"
