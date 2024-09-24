@@ -22,14 +22,13 @@ import atexit
 app = Flask(__name__)
 
 
-# def set_x_frame_options(response):
-#     response.headers['X-Frame-Options'] = 'DENY'  # or 'SAMEORIGIN'
-#     return response
 
 
-#CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
-#CORS(app, resources={r"/*": {"origins":"*"}})
-CORS(app, resources={r"/*": {"origins": "https://prediction.aisana.net"}})
+# CORS(app, resources={r"/*": {"origins":"http://localhost:3000"}})
+# CORS(app, resources={r"/*": {"origins": "https://prediction.aisana.net"}})
+
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://prediction.aisana.net"]}})
+
 
 def set_x_frame_options(response):
     response.headers['X-Frame-Options'] = 'DENY'  # or 'SAMEORIGIN'
@@ -69,13 +68,14 @@ def home():
     return jsonify({"message": "Welcome to the Prediction System!"})
 
 # Example route to fetch data from MongoDB
+# Example route to fetch data from MongoDB
 @app.route('/api/get_data', methods=['GET'])
 def get_data():
     try:
-        print("GET request received at /api/get_data")
-        # Fetch the latest 20 documents, excluding _id
-        data = list(real_data_collection.find({}, {'_id': 0}).sort([('timestamp', -1)]).limit(2))
-        print(f"Data fetched from MongoDB: {data}")
+        # # Fetch the latest 20 documents, excluding _id
+        # data = list(real_data_collection.find({}, {'_id': 0}).sort([('timestamp', -1)]).limit(2))
+        # Fetch all documents, excluding _id, and sort them in ascending order by timestamp
+        data = list(real_data_collection.find({}, {'_id': 0}).sort([('timestamp', 1)]))
         return jsonify(data), 200
     except Exception as e:
         logging.error(f"Error fetching data from MongoDB: {e}")
@@ -84,7 +84,6 @@ def get_data():
 @app.route('/api/get_predict_data', methods=['GET'])
 def get_predict_data():
     try:
-        print("GET request received at /api/get_predict_data")
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         start_date = datetime(2024, 7, 24)
         
@@ -383,7 +382,6 @@ threading.Thread(target=clear_cache_at_midnight, daemon=True).start()
 @app.route('/api/add_data', methods=['POST'])
 def add_data():
     try:
-        print("GET request received at /api/add_data")
         new_data = request.json  # Get JSON data from the request
  
         # Validate that all required fields are present
@@ -395,7 +393,6 @@ def add_data():
         # Additional validation can be added here if needed
  
         real_data_collection.insert_one(new_data)  # Insert data into MongoDB
-        print("Data added successfully")
         return jsonify({"message": "Data added successfully"}), 201
     except Exception as e:
         logging.error(f"Error inserting data into MongoDB: {e}")
@@ -446,7 +443,6 @@ def register():
 @app.route('/api/login', methods=['POST'])
 def login():
     try:
-        print("Login request received")
         # Get JSON data from request
         credentials = request.json
         username = credentials.get('username')
@@ -459,7 +455,6 @@ def login():
         user = users_collection.find_one({"username": username})
 
         if user and check_password(user['password'].encode('utf-8'), password):
-            print("login succesfull")
             return jsonify({"message": "Login successful"}), 200
         else:
             return jsonify({"error": "Invalid username or password"}), 401
@@ -471,9 +466,7 @@ def login():
 @app.route('/api/get_accuracy', methods=['GET'])
 def get_accuracy():
     try:
-        print("Get accuracy received")
         data = accuracy.get_overall_accuracy()
-        print("Get accuracy successfull")
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
