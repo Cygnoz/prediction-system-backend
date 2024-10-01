@@ -24,10 +24,8 @@ app = Flask(__name__)
 
 
 
-# CORS(app, resources={r"/*": {"origins":"http://localhost:3000"}})
-CORS(app, resources={r"/*": {"origins": "https://prediction.aisana.net"}})
-
-
+# CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
+CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 def set_x_frame_options(response):
@@ -68,14 +66,15 @@ def home():
     return jsonify({"message": "Welcome to the Prediction System!"})
 
 # Example route to fetch data from MongoDB
-# Example route to fetch data from MongoDB
 @app.route('/api/get_data', methods=['GET'])
 def get_data():
     try:
+        print("get data request received")
         # # Fetch the latest 20 documents, excluding _id
         # data = list(real_data_collection.find({}, {'_id': 0}).sort([('timestamp', -1)]).limit(2))
         # Fetch all documents, excluding _id, and sort them in ascending order by timestamp
         data = list(real_data_collection.find({}, {'_id': 0}).sort([('timestamp', 1)]))
+        print("get data request successful")
         return jsonify(data), 200
     except Exception as e:
         logging.error(f"Error fetching data from MongoDB: {e}")
@@ -84,6 +83,7 @@ def get_data():
 @app.route('/api/get_predict_data', methods=['GET'])
 def get_predict_data():
     try:
+        print("get predict data request received")
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         start_date = datetime(2024, 7, 24)
         
@@ -155,8 +155,8 @@ def get_predict_data():
             logging.warning("No documents fetched")
         
         total_count = predicted_data.count_documents({})
-        logging.info(f"Total documents in collection: {total_count}")
-        
+        # logging.info(f"Total documents in collection: {total_count}")
+        print("get predict request succesfull")
         return jsonify(unique_data), 200
     except Exception as e:
         logging.error(f"Error fetching data from MongoDB: {e}")
@@ -444,6 +444,7 @@ def register():
 def login():
     try:
         # Get JSON data from request
+        print("login request received")
         credentials = request.json
         username = credentials.get('username')
         password = credentials.get('password')
@@ -455,6 +456,7 @@ def login():
         user = users_collection.find_one({"username": username})
 
         if user and check_password(user['password'].encode('utf-8'), password):
+            print("login request succesful")
             return jsonify({"message": "Login successful"}), 200
         else:
             return jsonify({"error": "Invalid username or password"}), 401
