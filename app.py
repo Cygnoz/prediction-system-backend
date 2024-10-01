@@ -24,8 +24,8 @@ app = Flask(__name__)
 
 
 
-# CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
-CORS(app, resources={r"/*": {"origins":"*"}})
+CORS(app, resources={r"/*": {"origins":"https://prediction.aisana.net"}})
+#CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 def set_x_frame_options(response):
