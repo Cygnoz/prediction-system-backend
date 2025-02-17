@@ -24,8 +24,9 @@ app = Flask(__name__)
 
 
 
-# CORS(app, resources={r"/*": {"origins":"https://aisana.net/"}})
-CORS(app, resources={r"/*": {"origins":"*"}})
+CORS(app, resources={r"/api/*": {"origins": "https://aisana.net"}})
+
+# CORS(app, resources={r"/*": {"origins":"*"}})
 
 
 
